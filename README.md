@@ -12,8 +12,8 @@ https://github.com/MeemeeLab/CoreMP135-Arch/releases
 
 Burn sdcard.img to your SD card.
 
-Because default rootfs has a size of 2GiB, it's good idea to extend rootfs to match your SD card.  
-Use any partition modification utilities to extend.
+Default rootfs has a size of 1.5GiB and you should extend rootfs to match your SD card.  
+I recommend using parted/gparted to extend. (Don't use fdisk or it will erase `legacy_boot`, read below)
 
 Don't erase `legacy_boot` flag on rootfs, or your M5Stack will be unable to boot.
 
@@ -56,9 +56,9 @@ To do this, modify your mkinitcpio.conf:
 # vi /etc/mkinitcpio.conf
 ```
 
-Add `fb_ili9342c` and `axp2101_m5stack_bl` to `MODULES`
+Add `ili9342c` and `lt8618sxb` to `MODULES`
 
-fb_ili9342c provides frame buffer driver, while axp2101_m5stack_bl provides backlight driver.
+ili9342c provides frame buffer driver, while lt8168sxb provides HDMI-TX driver.
 
 Don't forget to update your initramfs:
 ```

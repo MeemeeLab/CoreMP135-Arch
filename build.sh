@@ -214,6 +214,9 @@ prepare_rootfs() {
 
     info "rootfs offset: $ROOTFS_OFFSET"
 
+    info "Creating rootfs may require sudo privileges. Press any key to continue..."
+    read -n1 -r
+
     if [ -d "rootfs" ]; then
         sudo umount rootfs || true
         rmdir rootfs
@@ -239,6 +242,8 @@ prepare_rootfs() {
 
     sudo cp ../configs/boot.txt ./rootfs/boot/
     sudo mkimage -A arm -O linux -T script -C none -n "U-Boot boot script" -d ./rootfs/boot/boot.txt ./rootfs/boot/boot.scr
+
+    sync
 
     sudo umount rootfs
     rmdir rootfs
