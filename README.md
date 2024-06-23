@@ -5,17 +5,25 @@ An effort to use Arch Linux on M5Stack CoreMP135.
 Also latest kernel. cuz Arch.
 
 ## Support
+
+### Hardware
 |    Name    | M5Stack ROM | CoreMP135-Arch | Description |
 |     :-:    |     :-:     |       :-:      |-------------|
 |ILI9342C    |⚠️1           |✅️              |TFT (Display) panel
 |FT6336U     |✅️           |✅️              |Touch panel
 |BM8563      |✅️           |✅️              |RTC
-|RTL8211F    |?            |⚠️2              |Ethernet
+|RTL8211F    |⚠️2           |⚠️2              |Ethernet
 |LT8618SXB   |⚠️3           |⚠️4              |HDMI transmitter
 |AXP2101     |⚠️5           |✅️              |Power management unit
 |NS4168      |⚠️6           |✅️              |Audio amplifier
 |SIT1051T/3  |✅️           |✅️              |CAN TX/RX
-|FS resize   |❌️           |❌️              |Automatic file system resize for first boot
+
+### Software
+|    Name    | M5Stack ROM | CoreMP135-Arch | Description |
+|     :-:    |     :-:     |       :-:      |-------------|
+|Linux Kernel|6.1.82 (LTS) |6.9.0           |Linux Kernel version
+|Init system |BusyBox      |systemd (BusyBox initramfs)|Init process launched by kernel
+|FS resize   |❌️           |✅️7             |Automatic file system resize for first boot
 
 ⚠️1 Only FB driver supported  
 ⚠️2 100Mbps downshift occurs  
@@ -23,8 +31,16 @@ Also latest kernel. cuz Arch.
 ⚠️4 1280x1024 only (no EDID handling)  
 ⚠️5 Missing poweroff driver  
 ⚠️6 Wrong audio playback speed  
+✅️7 OOB image only
 
 Any other components not listed here, should work on both M5Stack and CoreMP135-Arch ROM.
+
+## OOB images
+OOB image contains sudo and mkinitcpio already set-up with configurations found in `configs`.  
+This image contains pacman key already generated and this can be severe security risk. it is recommended to regenerate keys.
+
+When you first boot up OOB image, the GUID Partition Table (GPT) will be checked for size difference and fixed if needed.  
+rootfs will be resized to match size of SD card. However, this might not be best fit for your purpose. In this case, I recommend to use non-OOB images.
 
 ## Installation
 Run build.sh or download prebuilt binary from GitHub.
@@ -32,14 +48,14 @@ Run build.sh or download prebuilt binary from GitHub.
 Prebuilt binaries can be found here:  
 https://github.com/MeemeeLab/CoreMP135-Arch/releases
 
-Burn sdcard.img to your SD card.
+Burn sdcard.img or sdcard_oob.img to your SD card.
 
-Default rootfs has a size of 1.5GiB and you should extend rootfs to match your SD card.  
+You should extend rootfs size to match your SD card.  
 I recommend using parted/gparted to extend. (Don't use fdisk or it will erase `legacy_boot`, read below)
 
 Don't erase `legacy_boot` flag on rootfs, or your M5Stack will be unable to boot.
 
-## Setup
+## Non-OOB image setup
 Insert your SD card to your CoreMP135, and you are good to go.  
 First boot may take long.
 

@@ -39,9 +39,14 @@ check_environment() {
         info "Installation of pacman cannot be found; Build cannot continue"
         return 1
     fi
-    
+
     if [ ! -x "$(command -v mkimage)" ]; then
         info "Installation of mkimage cannot be found; Did you install uboot-tools?"
+        return 1
+    fi
+
+    if [ ! -x "$(command -v qemu-arm-static)" ]; then
+        info "Installation of qemu-arm-static cannot be found; Did you install qemu-user-static?"
         return 1
     fi
 
@@ -254,6 +259,87 @@ prepare_rootfs() {
     popd
 }
 
+generate_oob() {
+    pushd build
+    running "Create OOB image"
+
+    cp sdcard.img sdcard_oob.img
+
+    local ROOTFS_OFFSET=$(($(fdisk -l sdcard_oob.img | sed -n "s:^sdcard_oob.img5 *\([0-9]*\) .*$:\1:p") * 512))
+
+    info "rootfs offset: $ROOTFS_OFFSET"
+
+    if [ -d "rootfs" ]; then
+        sudo umount rootfs || true
+        rmdir rootfs
+    fi
+
+    local LOOPBACK_DEV=$(sudo losetup -o $ROOTFS_OFFSET --show -f sdcard_oob.img)
+
+    info "loopback device allocated: $LOOPBACK_DEV"
+
+    mkdir rootfs
+    sudo mount -o loop $LOOPBACK_DEV rootfs
+
+    info "Package auto resize"
+    cp -r ../configs/PKGBUILD-m5stack-resize-rootfs .
+
+    pushd PKGBUILD-m5stack-resize-rootfs
+    rm -rf *.pkg.tar.zst
+    makepkg
+    popd
+
+    info "Update system"
+    if [ ! -d "/tmp/coremp135-arch" ]; then
+        sudo mkdir /tmp/coremp135-arch
+    fi
+    sudo mount --bind /tmp/coremp135-arch ./rootfs/var/cache/pacman/pkg/
+
+    sudo tee ./rootfs/setup.sh << EOF
+pacman-key --init
+pacman-key --populate
+pacman --noconfirm -Syu sudo
+EOF
+
+    sudo cp "$(which qemu-arm-static)" ./rootfs/usr/bin/
+    sudo arch-chroot ./rootfs/ qemu-arm-static /bin/bash /setup.sh
+    sudo rm ./rootfs/setup.sh
+
+    info "Configure system"
+    sudo cp ../configs/sudoers ./rootfs/etc/sudoers
+    sudo chmod 440 ./rootfs/etc/sudoers
+    sudo chown root:root ./rootfs/etc/sudoers
+    sudo cp ../configs/mkinitcpio.conf ./rootfs/etc/mkinitcpio.conf
+    sudo chmod 644 ./rootfs/etc/mkinitcpio.conf
+    sudo chown root:root ./rootfs/etc/mkinitcpio.conf
+
+    sudo tee ./rootfs/configure.sh << EOF
+groupadd sudo
+usermod -aG sudo alarm
+mkinitcpio -P
+ln -s /etc/systemd/system/resize-rootfs.service /etc/systemd/system/multi-user.target.wants/resize-rootfs.service
+EOF
+    sudo arch-chroot ./rootfs/ qemu-arm-static /bin/bash /configure.sh
+    sudo rm ./rootfs/configure.sh
+
+    info "Install auto resize"
+    sudo pacman --noconfirm --sysroot ./rootfs/ -U ./PKGBUILD-m5stack-resize-rootfs/*.pkg.tar.zst
+
+    sudo rm ./rootfs/usr/bin/qemu-arm-static
+    sudo umount ./rootfs/var/cache/pacman/pkg/
+    sudo rm -rf /tmp/coremp135-arch
+
+    sync
+
+    sudo umount rootfs
+    rmdir rootfs
+
+    sudo losetup -d $LOOPBACK_DEV
+
+    ok "Create OOB image"
+    popd
+}
+
 
 main() {
     set -e
@@ -271,12 +357,17 @@ main() {
     pkgbuild_kernel
     generate_image
     prepare_rootfs
+    generate_oob
 
     if [ -f "sdcard.img" ]; then
         rm sdcard.img
     fi
+    if [ -f "sdcard_oob.img" ]; then
+        rm sdcard_oob.img
+    fi
 
 	mv build/sdcard.img .
+	mv build/sdcard_oob.img .
 
     ok "Build complete"
 
