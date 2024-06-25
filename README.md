@@ -9,13 +9,13 @@ Also latest kernel. cuz Arch.
 ### Hardware
 |    Name    | M5Stack ROM | CoreMP135-Arch | Description |
 |     :-:    |     :-:     |       :-:      |-------------|
-|ILI9342C    |⚠️1           |✅️              |TFT (Display) panel
+|ILI9342C    |Upstreamed   |✅️              |TFT (Display) panel
 |FT6336U     |✅️           |✅️              |Touch panel
 |BM8563      |✅️           |✅️              |RTC
-|RTL8211F    |⚠️2           |⚠️2              |Ethernet
-|LT8618SXB   |⚠️3           |⚠️4              |HDMI transmitter
-|AXP2101     |⚠️5           |✅️              |Power management unit
-|NS4168      |⚠️6           |✅️              |Audio amplifier
+|RTL8211F    |?1           |?1              |Ethernet
+|LT8618SXB   |⚠️2           |⚠️3              |HDMI transmitter
+|AXP2101     |Upstreamed   |✅️              |Power management unit
+|NS4168      |⚠️4           |✅️              |Audio amplifier
 |SIT1051T/3  |✅️           |✅️              |CAN TX/RX
 
 ### Software
@@ -23,15 +23,14 @@ Also latest kernel. cuz Arch.
 |     :-:    |     :-:     |       :-:      |-------------|
 |Linux Kernel|6.1.82 (LTS) |6.9.0           |Linux Kernel version
 |Init system |BusyBox      |systemd (BusyBox initramfs)|Init process launched by kernel
-|FS resize   |❌️           |✅️7             |Automatic file system resize for first boot
+|FS resize   |❌️           |✅️5             |Automatic file system resize for first boot
 
-⚠️1 Only FB driver supported  
-⚠️2 100Mbps downshift occurs  
-⚠️3 User-space driver and 1280x1024 only (no EDID handling)  
-⚠️4 1280x1024 only (no EDID handling)  
-⚠️5 Missing poweroff driver  
-⚠️6 Wrong audio playback speed  
-✅️7 OOB image only
+?1 Possible hardware problem on first batch
+⚠️1 100Mbps downshift occurs  
+⚠️2 User-space driver and 1280x1024 only (no EDID handling)  
+⚠️3 1280x1024 only (no EDID handling)  
+⚠️4 Wrong audio playback speed  
+✅️5 OOB image only
 
 Any other components not listed here, should work on both M5Stack and CoreMP135-Arch ROM.
 
